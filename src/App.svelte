@@ -1,47 +1,47 @@
 <script lang="ts">
-  import svelteLogo from './assets/svelte.svg'
-  import viteLogo from '/vite.svg'
-  import Counter from './lib/Counter.svelte'
+  import { onMount } from "svelte";
+  import canvasApi, { type Options } from "./canvasApi";
+
+  let canvas: HTMLCanvasElement | null = null;
+  const WIDTH = 900;
+  const HEIGHT = 600;
+
+  const state = [
+    [0, 0, 0, 0, 0],
+    [0, 0, 0, 1, 0],
+    [0, 1, 1, 1, 0],
+    [0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0],
+  ];
+
+  const options: Options = {
+    backgroundColor: "#000000",
+    rectActiveColor: "#ffffff",
+    rectInactiveColor: "#ff0000",
+    rectSize: 50,
+  };
+
+  onMount(() => {
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d")!;
+    const { setBackround, rect } = canvasApi(ctx, WIDTH, HEIGHT, options);
+
+    setBackround();
+
+    for (let y = 0; y < state.length; ++y) {
+      const row = state[y];
+      for (let x = 0; x < row.length; ++x) {
+        const col = row[x];
+        const isActive = col === 1;
+        rect(isActive, x, y);
+      }
+    }
+  });
 </script>
 
-<main>
-  <div>
-    <a href="https://vite.dev" target="_blank" rel="noreferrer">
-      <img src={viteLogo} class="logo" alt="Vite Logo" />
-    </a>
-    <a href="https://svelte.dev" target="_blank" rel="noreferrer">
-      <img src={svelteLogo} class="logo svelte" alt="Svelte Logo" />
-    </a>
-  </div>
-  <h1>Vite + Svelte</h1>
-
-  <div class="card">
-    <Counter />
-  </div>
-
-  <p>
-    Check out <a href="https://github.com/sveltejs/kit#readme" target="_blank" rel="noreferrer">SvelteKit</a>, the official Svelte app framework powered by Vite!
-  </p>
-
-  <p class="read-the-docs">
-    Click on the Vite and Svelte logos to learn more
-  </p>
-</main>
+<div class="canvas">
+  <canvas id="canvas" bind:this={canvas} width={WIDTH} height={HEIGHT}></canvas>
+</div>
 
 <style>
-  .logo {
-    height: 6em;
-    padding: 1.5em;
-    will-change: filter;
-    transition: filter 300ms;
-  }
-  .logo:hover {
-    filter: drop-shadow(0 0 2em #646cffaa);
-  }
-  .logo.svelte:hover {
-    filter: drop-shadow(0 0 2em #ff3e00aa);
-  }
-  .read-the-docs {
-    color: #888;
-  }
 </style>
