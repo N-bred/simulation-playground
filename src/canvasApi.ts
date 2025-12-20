@@ -1,19 +1,19 @@
 export type Options = {
-  backgroundColor: string;
-  rectActiveColor: string;
-  rectInactiveColor: string;
-  rectSize: number;
+  background_color: string;
+  rectActive_color: string;
+  rectInactive_color: string;
+  rect_size: number;
 };
 
 export default (ctx: CanvasRenderingContext2D, width: number, height: number, options: Options) => {
   return {
-    setBackround: () => {
-      ctx.fillStyle = options.backgroundColor;
+    setBackground: () => {
+      ctx.fillStyle = options.background_color;
       ctx.fillRect(0, 0, width, height);
     },
     rect: (isActive: boolean, x: number, y: number) => {
-      ctx.fillStyle = isActive ? options.rectActiveColor : options.rectInactiveColor;
-      ctx.fillRect(x * options.rectSize, y * options.rectSize, options.rectSize, options.rectSize);
+      ctx.fillStyle = isActive ? options.rectActive_color : options.rectInactive_color;
+      ctx.fillRect(x, y, options.rect_size, options.rect_size);
     },
   };
 };
