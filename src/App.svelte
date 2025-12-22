@@ -217,6 +217,7 @@
       id="width_input"
       type="number"
       min="100"
+      max="3840"
       value={WIDTH}
       onchange={(e) => {
         const target = e.target as EventTarget & { value: string };
@@ -235,6 +236,7 @@
       id="height_input"
       type="number"
       min="100"
+      max="2160"
       value={HEIGHT}
       onchange={(e) => {
         const target = e.target as EventTarget & { value: string };
