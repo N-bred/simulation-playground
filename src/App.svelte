@@ -14,18 +14,27 @@
   let WIDTH = $state(400);
   let HEIGHT = $state(240);
   let RECT_SIZE = $state(20);
+  let ACTIVE_COLOR = $state("#ffffff");
+  let INACTIVE_COLOR = $state("#FF0000");
+  let reset = $state(false);
   const CELLS_PER_WIDTH = $derived(Math.ceil(WIDTH / RECT_SIZE));
   const CELLS_PER_HEIGHT = $derived(Math.ceil(HEIGHT / RECT_SIZE));
 
   const options: Options = $derived({
     background_color: "#000000",
-    rectActive_color: "#ffffff",
-    rectInactive_color: "#ff0000",
+    rectActive_color: ACTIVE_COLOR,
+    rectInactive_color: INACTIVE_COLOR,
     rect_size: RECT_SIZE,
   });
 
-  let board_state = $derived(create_board(CELLS_PER_WIDTH, CELLS_PER_HEIGHT));
-  let next_board_state = $derived(create_board(CELLS_PER_WIDTH, CELLS_PER_HEIGHT));
+  let board_state = $derived.by(() => {
+    reset;
+    return create_board(CELLS_PER_WIDTH, CELLS_PER_HEIGHT);
+  });
+  let next_board_state = $derived.by(() => {
+    reset;
+    return create_board(CELLS_PER_WIDTH, CELLS_PER_HEIGHT);
+  });
 
   const getActiveCells = (x: number, y: number) => {
     let has_top = true;
@@ -178,7 +187,7 @@
     alterStatus(new_x, new_y);
   };
 
-  const pause_play = () => {
+  const pausePlay = () => {
     if (is_paused) {
       updateDataLoop();
     } else {
@@ -187,9 +196,17 @@
     is_paused = !is_paused;
   };
 
+  const resetBoard = () => {
+    board_state = create_board(CELLS_PER_WIDTH, CELLS_PER_HEIGHT);
+  };
+
   window.addEventListener("keypress", (e) => {
     if (e.key === "p") {
-      pause_play();
+      pausePlay();
+    }
+
+    if (e.key === "r") {
+      resetBoard();
     }
   });
 </script>
@@ -204,7 +221,7 @@
     <input name="fps_input" id="fps_input" type="number" min="1" max="144" bind:value={fps} />
   </div>
   <div class="status_item">
-    <button onclick={() => pause_play()} style="min-width: 70px;">
+    <button onclick={() => pausePlay()} style="min-width: 70px;">
       {#if is_paused}
         PAUSED
       {:else}
@@ -275,6 +292,14 @@
       }}
     />
   </div>
+  <div class="status_item">
+    <label for="active_color_input">COLOR 1: </label>
+    <input name="active_color_input" id="active_color_input" type="color" bind:value={ACTIVE_COLOR} />
+  </div>
+  <div class="status_item">
+    <label for="inactive_color_input">COLOR 2: </label>
+    <input name="inactive_color_input" id="inactive_color_input" type="color" bind:value={INACTIVE_COLOR} />
+  </div>
 </div>
 
 <style>
@@ -282,7 +307,7 @@
     position: absolute;
     top: 50%;
     left: 50%;
-    transform: translate(-50%, -50%);
+    transform: translate(-50%, calc(-50% - 25px));
   }
 
   .status_bar {
@@ -299,6 +324,9 @@
 
   .status_item {
     border-right: 1px solid #000;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
 
     button {
       all: unset;
