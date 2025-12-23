@@ -14,6 +14,8 @@
   let WIDTH = $state(400);
   let HEIGHT = $state(240);
   let RECT_SIZE = $state(20);
+  const CELLS_PER_WIDTH = $derived(Math.ceil(WIDTH / RECT_SIZE));
+  const CELLS_PER_HEIGHT = $derived(Math.ceil(HEIGHT / RECT_SIZE));
 
   const options: Options = $derived({
     background_color: "#000000",
@@ -22,113 +24,137 @@
     rect_size: RECT_SIZE,
   });
 
-  let board_state = $derived(create_board(Math.ceil(WIDTH / RECT_SIZE), Math.ceil(HEIGHT / RECT_SIZE)));
-  let next_board_state = $derived(create_board(Math.ceil(WIDTH / RECT_SIZE), Math.ceil(HEIGHT / RECT_SIZE)));
+  let board_state = $derived(create_board(CELLS_PER_WIDTH, CELLS_PER_HEIGHT));
+  let next_board_state = $derived(create_board(CELLS_PER_WIDTH, CELLS_PER_HEIGHT));
 
-  const generateChecks = (x: number, y: number) => {
+  const getActiveCells = (x: number, y: number) => {
+    let has_top = true;
+    let has_right = true;
+    let has_bottom = true;
+    let has_left = true;
+    let has_top_left = true;
+    let has_top_right = true;
+    let has_bottom_left = true;
+    let has_bottom_right = true;
+
+    if (y === 0) {
+      has_top = false;
+      has_top_left = false;
+      has_top_right = false;
+    }
+
+    if (y === CELLS_PER_HEIGHT - 1) {
+      const updateGraphicsLoop = () => {
+        if (!api) return;
+        const { setBackground, rect } = api;
+
+        setBackground();
+
+        for (let x = 1; x < board_state.length - 1; ++x) {
+          const col = board_state[x];
+          for (let y = 1; y < col.length - 1; ++y) {
+            rect(col[y] === 1, x * RECT_SIZE, y * RECT_SIZE);
+          }
+        }
+
+        requestAnimationFrame(updateGraphicsLoop);
+      };
+
+      has_bottom = false;
+      has_bottom_left = false;
+      has_bottom_right = false;
+    }
+
+    if (x === 0) {
+      has_left = false;
+      has_top_left = false;
+      has_bottom_left = false;
+    }
+
+    if (x === CELLS_PER_WIDTH - 1) {
+      has_right = false;
+      has_top_right = false;
+      has_bottom_right = false;
+    }
+
+    let counter = 0;
+
     const top = y - 1;
     const bottom = y + 1;
     const left = x - 1;
     const right = x + 1;
 
-    const checks = new Map();
-    checks.set("top", [x, top]);
-    checks.set("bottom", [x, bottom]);
-    checks.set("left", [left, y]);
-    checks.set("right", [right, y]);
-    checks.set("top_left", [left, top]);
-    checks.set("top_right", [right, top]);
-    checks.set("bottom_left", [left, bottom]);
-    checks.set("bottom_right", [right, bottom]);
+    if (has_top) counter += board_state[x][top];
+    if (has_right) counter += board_state[right][y];
+    if (has_bottom) counter += board_state[x][bottom];
+    if (has_left) counter += board_state[left][y];
+    if (has_top_left) counter += board_state[left][top];
+    if (has_top_right) counter += board_state[right][top];
+    if (has_bottom_left) counter += board_state[left][bottom];
+    if (has_bottom_right) counter += board_state[right][bottom];
 
-    return checks;
-  };
-
-  const getAvailableSides = (x: number, y: number, checks: Map<any, any>) => {
-    if (y === 0) {
-      checks.delete("top");
-      checks.delete("top_left");
-      checks.delete("top_right");
-    }
-
-    if (y === Math.ceil(HEIGHT / RECT_SIZE) - 1) {
-      checks.delete("bottom");
-      checks.delete("bottom_left");
-      checks.delete("bottom_right");
-    }
-
-    if (x === 0) {
-      checks.delete("left");
-      checks.delete("top_left");
-      checks.delete("bottom_left");
-    }
-
-    if (x === Math.ceil(WIDTH / RECT_SIZE) - 1) {
-      checks.delete("right");
-      checks.delete("top_right");
-      checks.delete("bottom_right");
-    }
-
-    return checks;
+    return counter;
   };
 
   const updateCell = (x: number, y: number, is_active: boolean) => {
-    const checks = generateChecks(x, y);
-    const availableSides = getAvailableSides(x, y, checks);
-
-    let active_cells = 0;
-
-    for (let side of availableSides.values()) {
-      const newX = side[0];
-      const newY = side[1];
-      active_cells += board_state[newX][newY];
-    }
+    const counter = getActiveCells(x, y);
 
     let result = 0;
 
     if (is_active || is_apocaliptic) {
-      if (active_cells < 2) result = 0;
-      if (active_cells > 3) result = 0;
-      if (active_cells > 1 && active_cells <= 3) result = 1;
+      if (counter < 2) result = 0;
+      if (counter > 3) result = 0;
+      if (counter > 1 && counter <= 3) result = 1;
     }
 
     if (!is_active || is_apocaliptic) {
-      if (active_cells === 3) result = 1;
+      if (counter === 3) result = 1;
     }
 
     return result;
   };
 
-  const update = () => {
-    if (!api) return;
-    const { setBackground, rect } = api;
-
-    setBackground();
-
-    for (let x = 0; x < board_state.length; ++x) {
+  const updateDataLoop = () => {
+    for (let x = 1; x < board_state.length - 1; ++x) {
       const col = board_state[x];
-      for (let y = 0; y < col.length; ++y) {
-        const row = col[y];
-        const is_active = row === 1;
-        rect(is_active, x * RECT_SIZE, y * RECT_SIZE);
+      for (let y = 1; y < col.length - 1; ++y) {
         if (!is_paused) {
-          next_board_state[x][y] = updateCell(x, y, is_active);
+          next_board_state[x][y] = updateCell(x, y, col[y] === 1);
         }
       }
     }
 
     if (!is_paused) {
-      board_state = JSON.parse(JSON.stringify(next_board_state));
+      for (let i = 0; i < next_board_state.length; ++i) {
+        board_state[i] = next_board_state[i].slice();
+      }
     }
 
-    animation_frame = setTimeout(update, 1000 / fps);
+    animation_frame = setTimeout(updateDataLoop, 1000 / fps);
+  };
+
+  const updateGraphicsLoop = () => {
+    if (!api) return;
+    const { setBackground, rect } = api;
+
+    setBackground();
+
+    for (let x = 1; x < board_state.length - 1; ++x) {
+      const col = board_state[x];
+      for (let y = 1; y < col.length - 1; ++y) {
+        rect(col[y] === 1, x * RECT_SIZE, y * RECT_SIZE);
+      }
+    }
+
+    requestAnimationFrame(updateGraphicsLoop);
   };
 
   onMount(() => {
     if (!canvas) return;
     ctx = canvas.getContext("2d")!;
     api = canvasApi(ctx, WIDTH, HEIGHT, options);
-    update();
+    updateDataLoop();
+    updateGraphicsLoop();
   });
 
   $effect(() => {
@@ -154,9 +180,9 @@
 
   const pause_play = () => {
     if (is_paused) {
-      update();
+      updateDataLoop();
     } else {
-      clearTimeout(animation_frame);
+      clearInterval(animation_frame);
     }
     is_paused = !is_paused;
   };
@@ -174,6 +200,10 @@
 
 <div class="status_bar">
   <div class="status_item">
+    <label for="fps_input">FPS: </label>
+    <input name="fps_input" id="fps_input" type="number" min="1" max="144" bind:value={fps} />
+  </div>
+  <div class="status_item">
     <button onclick={() => pause_play()} style="min-width: 70px;">
       {#if is_paused}
         PAUSED
@@ -187,24 +217,21 @@
       >IN DEAD WE THRIVE: {is_apocaliptic ? "Active" : "False"}</button
     >
   </div>
-  <div class="status_item">
-    <label for="fps_input">FPS: </label>
-    <input name="fps_input" id="fps_input" type="number" min="1" max="144" bind:value={fps} />
-  </div>
+
   <div class="status_item">
     <label for="rect_size_input">RECT SIZE: </label>
     <input
       name="rect_size_input"
       id="rect_size_input"
       type="number"
-      min="5"
+      min="1"
       max="50"
       value={RECT_SIZE}
       onchange={(e) => {
         const target = e.target as EventTarget & { value: string };
         const { value } = target;
         RECT_SIZE = Number(value);
-        if (Number(value) < 5) RECT_SIZE = 5;
+        if (Number(value) < 1) RECT_SIZE = 1;
         if (Number(value) > 50) RECT_SIZE = 50;
         target.value = RECT_SIZE.toString();
       }}
