@@ -1,19 +1,20 @@
 <script lang="ts">
   import { onMount } from "svelte";
-  import canvasApi from "./canvasApi2";
+  import canvasApi, { type Api } from "./canvasApi2";
   import CONFIG from "./simulations/gameOfLife/config.svelte";
+  import { updateGraphicsLoop } from "./simulations/gameOfLife/graphics";
 
   let canvas: HTMLCanvasElement | null = null;
-  let ctx: CanvasRenderingContext2D | null = $state(null);
-  let api: ReturnType<typeof canvasApi> | null = $state(null);
-  let animation_frame = $state(0);
+  let ctx: CanvasRenderingContext2D | null = null;
+  let interval = $state(0);
   let is_paused = $state(true);
   let fps = $state(30);
 
   onMount(() => {
     if (!canvas) return;
     ctx = canvas.getContext("2d")!;
-    api = canvasApi(ctx);
+    const api = canvasApi(ctx);
+    interval = setInterval(() => updateGraphicsLoop(api), 1000 / fps);
   });
 </script>
 
