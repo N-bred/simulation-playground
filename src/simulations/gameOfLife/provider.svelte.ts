@@ -51,16 +51,24 @@ function getNumberOfActiveCells(index: number, state: number[]) {
   const bottom_left = (y + 1) * CONFIG.COL_NUMBER + ((index - 1) % CONFIG.COL_NUMBER);
   const bottom_right = (y + 1) * CONFIG.COL_NUMBER + ((index + 1) % CONFIG.COL_NUMBER);
 
-  if (has_top) counter += state[top];
-  if (has_right) counter += state[right];
-  if (has_bottom) counter += state[bottom];
-  if (has_left) counter += state[left];
-  if (has_top_left) counter += state[top_left];
-  if (has_top_right) counter += state[top_right];
-  if (has_bottom_left) counter += state[bottom_left];
-  if (has_bottom_right) counter += state[bottom_right];
+  if (has_top) counter += state[top]!;
+  if (has_right) counter += state[right]!;
+  if (has_bottom) counter += state[bottom]!;
+  if (has_left) counter += state[left]!;
+  if (has_top_left) counter += state[top_left]!;
+  if (has_top_right) counter += state[top_right]!;
+  if (has_bottom_left) counter += state[bottom_left]!;
+  if (has_bottom_right) counter += state[bottom_right]!;
 
   return counter;
+}
+
+export function alterCell(x: number, y: number) {
+  const index = y * CONFIG.COL_NUMBER + (x % CONFIG.COL_NUMBER);
+  if (old_state[index]) {
+    const prev_val = old_state[index];
+    old_state[index] = prev_val === 0 ? 1 : 0;
+  }
 }
 
 function updateCell(value_at_cell: number, number_of_active_cells: number) {
@@ -80,12 +88,17 @@ function updateCell(value_at_cell: number, number_of_active_cells: number) {
   return result;
 }
 
+export function reset() {
+  old_state.fill(0);
+  current_state.fill(0);
+}
+
 export function getNextState() {
   const new_state = [];
 
   for (let i = 0; i < old_state.length; ++i) {
     const number_of_active_cells = getNumberOfActiveCells(i, old_state);
-    new_state[i] = updateCell(old_state[i], number_of_active_cells);
+    new_state[i] = updateCell(old_state[i]!, number_of_active_cells);
   }
 
   current_state = [...new_state];
