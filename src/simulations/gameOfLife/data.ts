@@ -1,8 +1,7 @@
-export type GameOfLifeOptions = {
-  width: number;
-  height: number;
-  col_number: number;
-};
+import CONFIG, { type GameOfLifeOptions } from "./config.svelte";
+
+let current_state: number[] = $state([]);
+let old_state: number[] = $derived(Array.from({ length: CONFIG.MAX_BOARD_SIZE }));
 
 function getNumberOfActiveCells(index: number, state: number[], options: GameOfLifeOptions) {
   let has_top = true;
@@ -42,14 +41,14 @@ function getNumberOfActiveCells(index: number, state: number[], options: GameOfL
 
   let counter = 0;
 
-  const top = (y - 1) * options.col_number + index % options.col_number;
-  const bottom = (y + 1) * options.col_number + index % options.col_number;
-  const right = (y * options.col_number) + (index + 1) % options.col_number;
-  const left = (y * options.col_number) + (index - 1) % options.col_number;
-  const top_left = (y - 1) * options.col_number + (index - 1) % options.col_number;
-  const top_right = (y - 1) * options.col_number + (index + 1) % options.col_number;
-  const bottom_left = (y + 1) * options.col_number + (index - 1) % options.col_number;
-  const bottom_right = (y + 1) * options.col_number + (index + 1) % options.col_number;
+  const top = (y - 1) * options.col_number + (index % options.col_number);
+  const bottom = (y + 1) * options.col_number + (index % options.col_number);
+  const right = y * options.col_number + ((index + 1) % options.col_number);
+  const left = y * options.col_number + ((index - 1) % options.col_number);
+  const top_left = (y - 1) * options.col_number + ((index - 1) % options.col_number);
+  const top_right = (y - 1) * options.col_number + ((index + 1) % options.col_number);
+  const bottom_left = (y + 1) * options.col_number + ((index - 1) % options.col_number);
+  const bottom_right = (y + 1) * options.col_number + ((index + 1) % options.col_number);
 
   if (has_top) counter += state[top];
   if (has_right) counter += state[right];
@@ -63,27 +62,27 @@ function getNumberOfActiveCells(index: number, state: number[], options: GameOfL
   return counter;
 }
 
-function updateCell (value_at_cell: number, number_of_active_cells: number) {
-    const is_alive = value_at_cell === 1;
-    let result = 0;
+function updateCell(value_at_cell: number, number_of_active_cells: number) {
+  const is_alive = value_at_cell === 1;
+  let result = 0;
 
-    if (is_alive) {
-      if (number_of_active_cells < 2) result = 0;
-      if (number_of_active_cells > 3) result = 0;
-      if (number_of_active_cells > 1 && number_of_active_cells <= 3) result = 1;
-    }
+  if (is_alive) {
+    if (number_of_active_cells < 2) result = 0;
+    if (number_of_active_cells > 3) result = 0;
+    if (number_of_active_cells > 1 && number_of_active_cells <= 3) result = 1;
+  }
 
-    if (!is_alive) {
-      if (number_of_active_cells === 3) result = 1;
-    }
+  if (!is_alive) {
+    if (number_of_active_cells === 3) result = 1;
+  }
 
-    return result;
-};
+  return result;
+}
 
 export function getNextState(current_state: number[], options: GameOfLifeOptions): number[] {
   const new_state = [...current_state];
 
-  for (let i = 0, y = 0; i < current_state.length; ++i, y += 6) {
+  for (let i = 0; i < current_state.length; ++i) {
     const number_of_active_cells = getNumberOfActiveCells(i, current_state, options);
     const result = updateCell(current_state[i], number_of_active_cells);
     new_state[i] = result;
