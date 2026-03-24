@@ -1,74 +1,33 @@
 import CONFIG from "./config.svelte";
 
-const BASE_ARRAY = new Array(CONFIG.MAX_BOARD_SIZE).fill(0);
-export let current_state: number[] = $state([...BASE_ARRAY]);
-export let old_state: number[] = $state([...BASE_ARRAY]);
+let bufferA = new Uint8Array(CONFIG.MAX_BOARD_SIZE);
+let bufferB = new Uint8Array(CONFIG.MAX_BOARD_SIZE);
 
-function getNumberOfActiveCells(index: number, state: number[]) {
-  let has_top = true;
-  let has_right = true;
-  let has_bottom = true;
-  let has_left = true;
-  let has_top_left = true;
-  let has_top_right = true;
-  let has_bottom_left = true;
-  let has_bottom_right = true;
+let current_state = $state(bufferA);
+export const getCurrentState = () => current_state;
 
-  const y = Math.floor(index / CONFIG.COL_NUMBER);
+function getNumberOfActiveCells(x: number, y: number, state: Uint8Array) {
+  let count = 0;
+  for (let dy = -1; dy <= 1; dy++) {
+    for (let dx = -1; dx <= 1; dx++) {
+      if (dx === 0 && dy === 0) continue;
 
-  if (y === 0) {
-    has_top = false;
-    has_top_left = false;
-    has_top_right = false;
+      const nx = x + dx;
+      const ny = y + dy;
+
+      if (nx >= 0 && nx < CONFIG.COL_NUMBER && ny >= 0 && ny < CONFIG.ROW_NUMBER) {
+        count += state[ny * CONFIG.COL_NUMBER + nx] || 0;
+      }
+    }
   }
-
-  if (y === CONFIG.HEIGHT) {
-    has_bottom = false;
-    has_bottom_left = false;
-    has_bottom_right = false;
-  }
-
-  if (index % 6 === 0) {
-    has_left = false;
-    has_top_left = false;
-    has_bottom_left = false;
-  }
-
-  if ((index + 1) % CONFIG.COL_NUMBER === 0) {
-    has_right = false;
-    has_top_right = false;
-    has_bottom_right = false;
-  }
-
-  let counter = 0;
-
-  const top = (y - 1) * CONFIG.COL_NUMBER + (index % CONFIG.COL_NUMBER);
-  const bottom = (y + 1) * CONFIG.COL_NUMBER + (index % CONFIG.COL_NUMBER);
-  const right = y * CONFIG.COL_NUMBER + ((index + 1) % CONFIG.COL_NUMBER);
-  const left = y * CONFIG.COL_NUMBER + ((index - 1) % CONFIG.COL_NUMBER);
-  const top_left = (y - 1) * CONFIG.COL_NUMBER + ((index - 1) % CONFIG.COL_NUMBER);
-  const top_right = (y - 1) * CONFIG.COL_NUMBER + ((index + 1) % CONFIG.COL_NUMBER);
-  const bottom_left = (y + 1) * CONFIG.COL_NUMBER + ((index - 1) % CONFIG.COL_NUMBER);
-  const bottom_right = (y + 1) * CONFIG.COL_NUMBER + ((index + 1) % CONFIG.COL_NUMBER);
-
-  if (has_top) counter += state[top]!;
-  if (has_right) counter += state[right]!;
-  if (has_bottom) counter += state[bottom]!;
-  if (has_left) counter += state[left]!;
-  if (has_top_left) counter += state[top_left]!;
-  if (has_top_right) counter += state[top_right]!;
-  if (has_bottom_left) counter += state[bottom_left]!;
-  if (has_bottom_right) counter += state[bottom_right]!;
-
-  return counter;
+  return count;
 }
 
 export function alterCell(x: number, y: number) {
   const index = y * CONFIG.COL_NUMBER + (x % CONFIG.COL_NUMBER);
-  if (old_state[index]) {
-    const prev_val = old_state[index];
-    old_state[index] = prev_val === 0 ? 1 : 0;
-  }
+  const prev_val = current_state[index];
+  const final_val = prev_val === 0 ? 1 : 0;
+  current_state[index] = final_val;
 }
 
 function updateCell(value_at_cell: number, number_of_active_cells: number) {
@@ -89,18 +48,20 @@ function updateCell(value_at_cell: number, number_of_active_cells: number) {
 }
 
 export function reset() {
-  old_state.fill(0);
-  current_state.fill(0);
+  bufferA.fill(0);
+  bufferB.fill(0);
 }
 
 export function getNextState() {
-  const new_state = [];
+  const next_buffer = (current_state === bufferA) ? bufferB : bufferA;
 
-  for (let i = 0; i < old_state.length; ++i) {
-    const number_of_active_cells = getNumberOfActiveCells(i, old_state);
-    new_state[i] = updateCell(old_state[i]!, number_of_active_cells);
+  for (let y = 0; y < CONFIG.ROW_NUMBER; ++y) {
+    for (let x = 0; x < CONFIG.COL_NUMBER; ++x) {
+      const i = y * CONFIG.COL_NUMBER + x;
+      const number_of_active_cells = getNumberOfActiveCells(x, y, current_state);
+      next_buffer[i] = updateCell(current_state[i]!, number_of_active_cells);
+    }
   }
 
-  current_state = [...new_state];
-  return current_state;
+  current_state = next_buffer;
 }

@@ -6,10 +6,12 @@ function api(ctx: CanvasRenderingContext2D) {
       ctx.fillStyle = color;
       ctx.fillRect(0, 0, w, h);
     },
-    rect: (x: number, y: number, w: number, h: number, color: string = "#000") => {
-      ctx.fillStyle = color;
+    rect: (x: number, y: number, w: number, h: number) => {
       ctx.fillRect(x, y, w, h);
     },
+    setFill: (color: string) => {
+      ctx.fillStyle = color;
+    }
   };
 }
 
