@@ -1,10 +1,12 @@
 import CONFIG from "./config.svelte";
 
-let bufferA = new Uint8Array(CONFIG.MAX_BOARD_SIZE);
-let bufferB = new Uint8Array(CONFIG.MAX_BOARD_SIZE);
+let bufferA = new Uint8Array(CONFIG.COMPUTED.MAX_BOARD_SIZE);
+let bufferB = new Uint8Array(CONFIG.COMPUTED.MAX_BOARD_SIZE);
+let interval = $state(0);
 
-let current_state = $state(bufferA);
-export const getCurrentState = () => current_state;
+export const DATA = $state({
+  CURRENT_STATE: bufferA,
+});
 
 function getNumberOfActiveCells(x: number, y: number, state: Uint8Array) {
   let count = 0;
@@ -15,8 +17,8 @@ function getNumberOfActiveCells(x: number, y: number, state: Uint8Array) {
       const nx = x + dx;
       const ny = y + dy;
 
-      if (nx >= 0 && nx < CONFIG.COL_NUMBER && ny >= 0 && ny < CONFIG.ROW_NUMBER) {
-        count += state[ny * CONFIG.COL_NUMBER + nx] || 0;
+      if (nx >= 0 && nx < CONFIG.COMPUTED.COL_NUMBER && ny >= 0 && ny < CONFIG.COMPUTED.ROW_NUMBER) {
+        count += state[ny * CONFIG.COMPUTED.COL_NUMBER + nx] || 0;
       }
     }
   }
@@ -24,10 +26,10 @@ function getNumberOfActiveCells(x: number, y: number, state: Uint8Array) {
 }
 
 export function alterCell(x: number, y: number) {
-  const index = y * CONFIG.COL_NUMBER + (x % CONFIG.COL_NUMBER);
-  const prev_val = current_state[index];
+  const index = y * CONFIG.COMPUTED.COL_NUMBER + (x % CONFIG.COMPUTED.COL_NUMBER);
+  const prev_val = DATA.CURRENT_STATE[index];
   const final_val = prev_val === 0 ? 1 : 0;
-  current_state[index] = final_val;
+  DATA.CURRENT_STATE[index] = final_val;
 }
 
 function updateCell(value_at_cell: number, number_of_active_cells: number) {
@@ -47,21 +49,41 @@ function updateCell(value_at_cell: number, number_of_active_cells: number) {
   return result;
 }
 
+export function getNextState() {
+  const next_buffer = DATA.CURRENT_STATE === bufferA ? bufferB : bufferA;
+
+  for (let y = 0; y < CONFIG.COMPUTED.ROW_NUMBER; ++y) {
+    for (let x = 0; x < CONFIG.COMPUTED.COL_NUMBER; ++x) {
+      const i = y * CONFIG.COMPUTED.COL_NUMBER + x;
+      const number_of_active_cells = getNumberOfActiveCells(x, y, DATA.CURRENT_STATE);
+      next_buffer[i] = updateCell(DATA.CURRENT_STATE[i]!, number_of_active_cells);
+    }
+  }
+
+  DATA.CURRENT_STATE = next_buffer;
+}
+
 export function reset() {
   bufferA.fill(0);
   bufferB.fill(0);
 }
 
-export function getNextState() {
-  const next_buffer = (current_state === bufferA) ? bufferB : bufferA;
+export function updateDataLoop() {
+  if (CONFIG.STATE.PAUSED) return;
+  getNextState();
+  interval = setTimeout(updateDataLoop, 1000 / CONFIG.PROPERTIES.FPS.value);
+}
 
-  for (let y = 0; y < CONFIG.ROW_NUMBER; ++y) {
-    for (let x = 0; x < CONFIG.COL_NUMBER; ++x) {
-      const i = y * CONFIG.COL_NUMBER + x;
-      const number_of_active_cells = getNumberOfActiveCells(x, y, current_state);
-      next_buffer[i] = updateCell(current_state[i]!, number_of_active_cells);
-    }
+export function stopDataLoop() {
+  clearInterval(interval);
+}
+
+export function handlePauseAndPlay() {
+  if (CONFIG.STATE.PAUSED) {
+    CONFIG.STATE.PAUSED = false;
+    updateDataLoop();
+  } else {
+    CONFIG.STATE.PAUSED = true;
+    stopDataLoop();
   }
-
-  current_state = next_buffer;
 }

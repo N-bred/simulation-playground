@@ -1,34 +1,30 @@
 <script lang="ts">
   import { onMount } from "svelte";
-  import CONFIG from "./config.svelte";
-  import { getNextState, reset, alterCell, getCurrentState } from "./provider.svelte";
   import canvasApi, { type Api } from "@/canvasApi2";
-  import Canvas from "@/components/canvas.svelte";
+  import { reset, alterCell, stopDataLoop, updateDataLoop, handlePauseAndPlay, DATA } from "./provider.svelte";
   import { setEvents, removeEvents } from "./events";
+  import CONFIG from "./config.svelte";
+  import Canvas from "@/components/canvas.svelte";
+  import Panel from "./panel.svelte";
 
   let ctx: CanvasRenderingContext2D | null = $state(null);
   let api: Api | null = $state(null);
-  let interval = $state(0);
   let animation_frame = $state(0);
-  let is_paused = $state(true);
-  let fps = 5;
-
-  function updateDataLoop() {
-    if (is_paused) return;
-    getNextState();
-    interval = setTimeout(updateDataLoop, 1000 / fps);
-  }
 
   function updateGraphicsLoop() {
-    api?.background(CONFIG.WIDTH, CONFIG.HEIGHT, CONFIG.BACKGROUND_COLOR);
-    const board = getCurrentState();
+    api?.background(CONFIG.PROPERTIES.WIDTH.value, CONFIG.PROPERTIES.HEIGHT.value, CONFIG.GRAPHICS.BACKGROUND_COLOR);
 
-    api?.setFill(CONFIG.ACTIVE_COLOR);
-
-    for (let y = 0; y < CONFIG.ROW_NUMBER; ++y) {
-      for (let x = 0; x < CONFIG.COL_NUMBER; ++x) {
-        if (board[y * CONFIG.COL_NUMBER + x] === 1) {
-          api?.rect(x * CONFIG.RECT_SIZE, y * CONFIG.RECT_SIZE, CONFIG.RECT_SIZE, CONFIG.RECT_SIZE);
+    api?.setFill(CONFIG.GRAPHICS.ACTIVE_COLOR);
+    const board = DATA.CURRENT_STATE;
+    for (let y = 0; y < CONFIG.COMPUTED.ROW_NUMBER; ++y) {
+      for (let x = 0; x < CONFIG.COMPUTED.COL_NUMBER; ++x) {
+        if (board[y * CONFIG.COMPUTED.COL_NUMBER + x] === 1) {
+          api?.rect(
+            x * CONFIG.PROPERTIES.RECT_SIZE.value,
+            y * CONFIG.PROPERTIES.RECT_SIZE.value,
+            CONFIG.PROPERTIES.RECT_SIZE.value,
+            CONFIG.PROPERTIES.RECT_SIZE.value,
+          );
         }
       }
     }
@@ -36,23 +32,13 @@
     animation_frame = requestAnimationFrame(updateGraphicsLoop);
   }
 
-  function handlePauseAndPlay() {
-    if (is_paused) {
-      is_paused = false;
-      updateDataLoop();
-    } else {
-      is_paused = true;
-      clearInterval(interval);
-    }
-  }
-
   function onClick(e: MouseEvent) {
     const canvas = e.target as HTMLCanvasElement;
     const { x, y } = canvas.getBoundingClientRect();
     const { clientX, clientY } = e;
 
-    const new_x = Math.floor((clientX - x) / CONFIG.RECT_SIZE);
-    const new_y = Math.floor((clientY - y) / CONFIG.RECT_SIZE);
+    const new_x = Math.floor((clientX - x) / CONFIG.PROPERTIES.RECT_SIZE.value);
+    const new_y = Math.floor((clientY - y) / CONFIG.PROPERTIES.RECT_SIZE.value);
 
     alterCell(new_x, new_y);
   }
@@ -71,10 +57,11 @@
 
     () => {
       removeEvents(eventHandlers);
-      clearInterval(interval);
+      stopDataLoop();
       cancelAnimationFrame(animation_frame);
     };
   });
 </script>
 
-<Canvas width={CONFIG.WIDTH} height={CONFIG.HEIGHT} bind:ctx {onClick} />
+<Canvas width={CONFIG.PROPERTIES.WIDTH.value} height={CONFIG.PROPERTIES.HEIGHT.value} bind:ctx {onClick} />
+<Panel />

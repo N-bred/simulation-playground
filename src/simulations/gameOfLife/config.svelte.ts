@@ -1,25 +1,52 @@
+import SearchState from "@/dataUtilities/SearchState.svelte";
+
 export type GameOfLifeOptions = {
   width: number;
   height: number;
   col_number: number;
 };
 
-const WIDTH = 200;
-const HEIGHT = 100;
-const RECT_SIZE = $state(10);
-const BACKGROUND_COLOR = "#000";
-const COL_NUMBER = Math.floor(WIDTH / RECT_SIZE);
-const ROW_NUMBER = Math.floor(HEIGHT / RECT_SIZE);
-const ACTIVE_COLOR = $state("#ffffff");
-const MAX_BOARD_SIZE = Math.floor(WIDTH / RECT_SIZE) * Math.floor(HEIGHT / RECT_SIZE);
+const PROPERTIES = $state({
+  FPS: new SearchState(5, {
+    clamp: true,
+    min: 1,
+    max: 60,
+  }),
+  RECT_SIZE: new SearchState(10, {
+    clamp: true,
+    min: 1,
+    max: 50,
+  }),
+  HEIGHT: new SearchState(400, {
+    clamp: true,
+    min: 1,
+    max: 50,
+  }),
+  WIDTH: new SearchState(600, {
+    clamp: true,
+    min: 1,
+    max: 50,
+  }),
+});
+
+const GRAPHICS = $state({
+  ACTIVE_COLOR: "#ffffff",
+  BACKGROUND_COLOR: "#000000",
+});
+
+const STATE = $state({
+  PAUSED: true,
+});
+
+const COMPUTED = {
+  COL_NUMBER: Math.floor(PROPERTIES.WIDTH.value / PROPERTIES.RECT_SIZE.value),
+  ROW_NUMBER: Math.floor(PROPERTIES.HEIGHT.value / PROPERTIES.RECT_SIZE.value),
+  MAX_BOARD_SIZE: Math.floor(PROPERTIES.WIDTH.value / PROPERTIES.RECT_SIZE.value) * Math.floor(PROPERTIES.HEIGHT.value / PROPERTIES.RECT_SIZE.value),
+};
 
 export default {
-  WIDTH,
-  HEIGHT,
-  RECT_SIZE,
-  ACTIVE_COLOR,
-  COL_NUMBER,
-  ROW_NUMBER,
-  MAX_BOARD_SIZE,
-  BACKGROUND_COLOR
+  PROPERTIES,
+  GRAPHICS,
+  STATE,
+  COMPUTED,
 };

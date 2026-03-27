@@ -10,3 +10,10 @@ export const create_board = (width: number, height: number) => {
 
   return board_state;
 };
+
+export const clamp = (val: number, min: number, max: number) => {
+  let result = val;
+  if (val < min) result = min;
+  if (val > max) result = max;
+  return result;
+};
