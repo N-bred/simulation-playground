@@ -14,11 +14,15 @@
   function updateGraphicsLoop() {
     api?.background(CONFIG.PROPERTIES.WIDTH.value, CONFIG.PROPERTIES.HEIGHT.value, CONFIG.GRAPHICS.BACKGROUND_COLOR.value);
 
-    api?.setFill(CONFIG.GRAPHICS.ACTIVE_COLOR.value);
     const board = CURRENT_STATE();
-    for (let y = 0; y < CONFIG.COMPUTED().ROW_NUMBER; ++y) {
-      for (let x = 0; x < CONFIG.COMPUTED().COL_NUMBER; ++x) {
-        if (board[y * CONFIG.COMPUTED().COL_NUMBER + x] === 1) {
+    const ROW_NUMBER = CONFIG.COMPUTED().ROW_NUMBER;
+    const COL_NUMBER = CONFIG.COMPUTED().COL_NUMBER;
+
+    api?.setFill(CONFIG.GRAPHICS.ACTIVE_COLOR.value);
+
+    for (let y = 0; y < ROW_NUMBER; ++y) {
+      for (let x = 0; x < COL_NUMBER; ++x) {
+        if (board[y * COL_NUMBER + x] === 1) {
           api?.rect(
             x * CONFIG.PROPERTIES.RECT_SIZE.value,
             y * CONFIG.PROPERTIES.RECT_SIZE.value,

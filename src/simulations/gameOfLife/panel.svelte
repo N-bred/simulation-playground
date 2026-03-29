@@ -16,6 +16,7 @@
       e.currentTarget.blur();
     }
   }
+  
 </script>
 
 <div class="status_bar">

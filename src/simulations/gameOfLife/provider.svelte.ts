@@ -13,8 +13,9 @@ function NEXT_STATE() {
   return toggle === 0 ? bufferB : bufferA;
 }
 
-function getNumberOfActiveCells(x: number, y: number, state: Uint8Array) {
+function getNumberOfActiveCells(x: number, y: number, state: Uint8Array, COL_NUMBER: number, ROW_NUMBER: number) {
   let count = 0;
+
   for (let dy = -1; dy <= 1; dy++) {
     for (let dx = -1; dx <= 1; dx++) {
       if (dx === 0 && dy === 0) continue;
@@ -22,8 +23,8 @@ function getNumberOfActiveCells(x: number, y: number, state: Uint8Array) {
       const nx = x + dx;
       const ny = y + dy;
 
-      if (nx >= 0 && nx < CONFIG.COMPUTED().COL_NUMBER && ny >= 0 && ny < CONFIG.COMPUTED().ROW_NUMBER) {
-        count += state[ny * CONFIG.COMPUTED().COL_NUMBER + nx] || 0;
+      if (nx >= 0 && nx < COL_NUMBER && ny >= 0 && ny < ROW_NUMBER) {
+        count += state[ny * COL_NUMBER + nx] || 0;
       }
     }
   }
@@ -31,10 +32,13 @@ function getNumberOfActiveCells(x: number, y: number, state: Uint8Array) {
 }
 
 export function alterCell(x: number, y: number) {
-  const index = y * CONFIG.COMPUTED().COL_NUMBER + (x % CONFIG.COMPUTED().COL_NUMBER);
-  const prev_val = CURRENT_STATE()[index];
+  const current_state = CURRENT_STATE();
+  const COL_NUMBER = CONFIG.COMPUTED().COL_NUMBER;
+
+  const index = y * COL_NUMBER + (x % COL_NUMBER);
+  const prev_val = current_state[index];
   const final_val = prev_val === 0 ? 1 : 0;
-  CURRENT_STATE()[index] = final_val;
+  current_state[index] = final_val;
 }
 
 function updateCell(value_at_cell: number, number_of_active_cells: number) {
@@ -56,12 +60,15 @@ function updateCell(value_at_cell: number, number_of_active_cells: number) {
 
 export function getNextState() {
   const next_buffer = NEXT_STATE();
+  const current_state = CURRENT_STATE();
+  const ROW_NUMBER = CONFIG.COMPUTED().ROW_NUMBER;
+  const COL_NUMBER = CONFIG.COMPUTED().COL_NUMBER;
 
-  for (let y = 0; y < CONFIG.COMPUTED().ROW_NUMBER; ++y) {
-    for (let x = 0; x < CONFIG.COMPUTED().COL_NUMBER; ++x) {
-      const i = y * CONFIG.COMPUTED().COL_NUMBER + x;
-      const number_of_active_cells = getNumberOfActiveCells(x, y, CURRENT_STATE());
-      next_buffer[i] = updateCell(CURRENT_STATE()[i]!, number_of_active_cells);
+  for (let y = 0; y < ROW_NUMBER; ++y) {
+    for (let x = 0; x < COL_NUMBER; ++x) {
+      const i = y * COL_NUMBER + x;
+      const number_of_active_cells = getNumberOfActiveCells(x, y, current_state, COL_NUMBER, ROW_NUMBER);
+      next_buffer[i] = updateCell(current_state[i]!, number_of_active_cells);
     }
   }
 
@@ -97,7 +104,6 @@ export function handlePauseAndPlay() {
   if (!CONFIG.STATE.PAUSED) {
     pause();
   } else {
-    500;
     play();
   }
 }

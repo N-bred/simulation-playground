@@ -13,7 +13,7 @@ export default class DebouncedState {
 
   constructor(val: any, options: DebouncedStateOptions) {
     this.#state = val;
-    this, (this.#debouncedValue = val);
+    this.#debouncedValue = val;
     this.options = options;
     this.#typeOfInitialValue = typeof val;
   }
@@ -27,7 +27,6 @@ export default class DebouncedState {
   }
 
   set value(val: any) {
-    6;
     let formatttedVal = val;
 
     if (this.#typeOfInitialValue === "number") {
@@ -51,5 +50,6 @@ export default class DebouncedState {
     this.#timeoutId = setTimeout(() => {
       this.#debouncedValue = this.#state;
     }, this.options.debounce);
+    
   }
 }
