@@ -10,6 +10,8 @@
   import { clamp, getContrastColor } from "@/utils";
 
   let paused_text = $derived(CONFIG.STATE.PAUSED ? "⏸ PAUSED" : "▶ RUNNING");
+  let contrastingText = $derived(getContrastColor(CONFIG.GRAPHICS.ACTIVE_COLOR.value) > 0.5 ? "#000" : "#fff");
+  let isShowing = $state(false);
 
   function clampInput(e: any, ref: { value: number }, min: number, max: number) {
     const newVal = clamp(Number(e.target.value), min, max);
@@ -17,10 +19,11 @@
     e.target.value = newVal;
   }
 
-  let contrastingText = $derived(getContrastColor(CONFIG.GRAPHICS.ACTIVE_COLOR.value) > 0.5 ? "#000" : "#fff");
 </script>
 
-<div class="status_bar" style="--selected-color: {CONFIG.GRAPHICS.ACTIVE_COLOR.value}; --contrasting-text: {contrastingText}">
+<div class="status_bar {isShowing ? "active" : ""}" style="--selected-color: {CONFIG.GRAPHICS.ACTIVE_COLOR.value}; --contrasting-text: {contrastingText}">
+  <button class="open" onclick={() => isShowing = !isShowing}>{isShowing ? "←" : "→"}</button>
+
   <h1>CONFIG PANEL</h1>
 
   <span class="divider">[Simulation]</span>
@@ -98,9 +101,11 @@
   }
 
   .status_bar {
+    width: 210px;
     position: absolute;
-    left: 0;
+    left: -210px;
     top: 0;
+    transition: left .3s ease-in-out;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -109,6 +114,10 @@
     background: rgba(30, 30, 30, 0.8);
     backdrop-filter: blur(5px);
     border-right: 1px solid rgba(255, 255, 255, 0.1);
+
+    &.active {
+      left: 0;
+    }
   }
 
   h1 {
@@ -157,7 +166,7 @@
     }
   }
 
-  button {
+  button:not(.open) {
     background: #000;
     outline: 1px solid #aaa;
     font-size: 16px;
@@ -173,6 +182,23 @@
       cursor: pointer;
       background: var(--selected-color);
       color: var(--contrasting-text);
+    }
+  }
+
+  .open {
+    position: absolute;
+    right: 0;
+    top: 0;
+    padding: 15px;
+    background: #000;
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    transform: translate(calc(100% + 15px), 10px);
+
+    &:hover {
+      cursor: pointer;
+      background: #222;
     }
   }
 </style>
