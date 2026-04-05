@@ -7,58 +7,36 @@ export type GameOfLifeOptions = {
 };
 
 export const INITIAL_PROPERTIES_VALUES = {
-  FPS: {
-    label: "FPS:",
-    type: "number",
-    id: "fps_input",
-    value: 5,
-    min: 1,
-    max: 120,
-    onInput: false,
-    onChange: true,
-    onBlur: true,
-    onKeyDown: true,
-  },
   RECT_SIZE: {
     label: "RECT SIZE:",
-    type: "number",
+    type: "range",
     id: "rect_size_input",
     value: 10,
     min: 1,
     max: 50,
-    onChange: true,
-    onBlur: true,
-    onKeyDown: true,
     onInput: true,
   },
   HEIGHT: {
     label: "HEIGHT:",
-    type: "number",
+    type: "range",
     id: "height_input",
     value: 320,
     min: 1,
     max: 2000,
-    onChange: true,
-    onBlur: true,
-    onKeyDown: true,
     onInput: true,
   },
   WIDTH: {
     label: "WIDTH:",
-    type: "number",
+    type: "range",
     id: "width_input",
     value: 600,
     min: 1,
     max: 2000,
-    onChange: true,
-    onBlur: true,
-    onKeyDown: true,
     onInput: true,
   },
 };
 
 const PROPERTIES = $state({
-  FPS: { value: INITIAL_PROPERTIES_VALUES.FPS.value },
   RECT_SIZE: new DebouncedState(INITIAL_PROPERTIES_VALUES.RECT_SIZE.value, {
     debounce: 500,
   }),
@@ -109,6 +87,15 @@ export type THEME_INDEX = keyof typeof INITIAL_THEMES_VALUES;
 
 const SELECTED_THEME: { value: THEME_INDEX } = $state({ value: INITIAL_THEMES_VALUES.default.value as THEME_INDEX });
 
+const FPS = $state({
+  label: "FPS:",
+  type: "range",
+  id: "fps_input",
+  value: 5,
+  min: 1,
+  max: 120,
+});
+
 const STATE = $state({
   PAUSED: true,
 });
@@ -124,6 +111,7 @@ export default {
   PROPERTIES,
   GRAPHICS,
   STATE,
+  FPS,
   SELECTED_THEME,
   COMPUTED: () => COMPUTED,
 };

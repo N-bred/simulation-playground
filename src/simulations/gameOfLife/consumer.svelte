@@ -53,6 +53,8 @@
   };
 
   onMount(() => {
+    document.title = "Game of Life";
+
     if (!ctx) return;
     api = canvasApi(ctx);
     updateDataLoop();

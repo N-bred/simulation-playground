@@ -95,7 +95,7 @@ export function reset() {
 export function updateDataLoop() {
   if (CONFIG.STATE.PAUSED) return;
   getNextState();
-  interval = setTimeout(updateDataLoop, 1000 / CONFIG.PROPERTIES.FPS.value);
+  interval = setTimeout(updateDataLoop, 1000 / CONFIG.FPS.value);
 }
 
 export function stopDataLoop() {
