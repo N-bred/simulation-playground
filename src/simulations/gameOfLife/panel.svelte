@@ -1,5 +1,5 @@
 <script lang="ts">
-  import CONFIG, { INITIAL_PROPERTIES_VALUES, INITIAL_GRAPHICS_VALUES, type PROPERTIES_INDEX, type GRAPHICS_INDEX } from "./config.svelte";
+  import CONFIG, { INITIAL_PROPERTIES_VALUES, INITIAL_GRAPHICS_VALUES, type PROPERTIES_INDEX, type GRAPHICS_INDEX, INITIAL_THEMES_VALUES } from "./config.svelte";
   import { handlePauseAndPlay, pause } from "./provider.svelte";
   import { clamp } from "@/utils";
 
@@ -24,6 +24,16 @@
     <button onclick={handlePauseAndPlay} style="min-width: 70px;">
       {paused_text}
     </button>
+  </div>
+
+
+  <div class="status_item">
+    <label for="theme_selector">THEME: </label>
+    <select id="theme_selector" bind:value={CONFIG.SELECTED_THEME.value}>
+      {#each Object.values(INITIAL_THEMES_VALUES) as THEME}
+        <option value={THEME.value}>{THEME.name}</option>
+      {/each}
+    </select>
   </div>
 
   {#each Object.entries(INITIAL_PROPERTIES_VALUES) as INITIAL_PROPERTIES}

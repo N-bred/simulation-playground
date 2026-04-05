@@ -41,22 +41,34 @@ export function alterCell(x: number, y: number) {
   current_state[index] = final_val;
 }
 
-function updateCell(value_at_cell: number, number_of_active_cells: number) {
-  const is_alive = value_at_cell === 1;
-  let result = 0;
+const UPDATE_FUNCTIONS: Record<typeof CONFIG.SELECTED_THEME.value, (value_at_cell: number, number_of_active_cells: number) => number> = {
+  default: (value_at_cell: number, number_of_active_cells: number) => {
+    const is_alive = value_at_cell === 1;
+    let result = 0;
 
-  if (is_alive) {
+    if (is_alive) {
+      if (number_of_active_cells < 2) result = 0;
+      if (number_of_active_cells > 3) result = 0;
+      if (number_of_active_cells > 1 && number_of_active_cells <= 3) result = 1;
+    }
+
+    if (!is_alive) {
+      if (number_of_active_cells === 3) result = 1;
+    }
+
+    return result;
+  },
+  apocaliptic: (_: number, number_of_active_cells: number) => {
+    let result = 0;
     if (number_of_active_cells < 2) result = 0;
     if (number_of_active_cells > 3) result = 0;
     if (number_of_active_cells > 1 && number_of_active_cells <= 3) result = 1;
-  }
-
-  if (!is_alive) {
     if (number_of_active_cells === 3) result = 1;
-  }
+    return result;
+  },
+};
 
-  return result;
-}
+let UPDATE_FUNCTION = $derived(UPDATE_FUNCTIONS[CONFIG.SELECTED_THEME.value]);
 
 export function getNextState() {
   const next_buffer = NEXT_STATE();
@@ -68,7 +80,7 @@ export function getNextState() {
     for (let x = 0; x < COL_NUMBER; ++x) {
       const i = y * COL_NUMBER + x;
       const number_of_active_cells = getNumberOfActiveCells(x, y, current_state, COL_NUMBER, ROW_NUMBER);
-      next_buffer[i] = updateCell(current_state[i]!, number_of_active_cells);
+      next_buffer[i] = UPDATE_FUNCTION(current_state[i]!, number_of_active_cells);
     }
   }
 

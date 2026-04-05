@@ -94,6 +94,21 @@ const GRAPHICS = $state({
 
 export type GRAPHICS_INDEX = keyof typeof GRAPHICS;
 
+export const INITIAL_THEMES_VALUES = {
+  default: {
+    name: "Default",
+    value: "default",
+  },
+  apocaliptic: {
+    name: "Apocaliptic",
+    value: "apocaliptic",
+  },
+};
+
+export type THEME_INDEX = keyof typeof INITIAL_THEMES_VALUES;
+
+const SELECTED_THEME: { value: THEME_INDEX } = $state({ value: INITIAL_THEMES_VALUES.default.value as THEME_INDEX });
+
 const STATE = $state({
   PAUSED: true,
 });
@@ -109,5 +124,6 @@ export default {
   PROPERTIES,
   GRAPHICS,
   STATE,
+  SELECTED_THEME,
   COMPUTED: () => COMPUTED,
 };
